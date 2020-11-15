@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {font-family: Arial, Helvetica, sans-serif;}
+
+/* Full-width input fields */
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Set a style for all buttons */
+button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+img.avatar {
+  width: 40%;
+  border-radius: 50%;
+}
+
+.container {
+  padding: 16px;
+}
+
+span.psw {
+  float: right;
+  padding-top: 16px;
+}
+
+/* The Modal (background) */
+.modal {
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  padding-top: 60px;
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+
+</style>
+</head>
+<body>
+
+
+<div id="id01" class="modal">
+
+    <div class="container">
+      <label for="uname"><b>Username</b></label>
+      <input id="uname" type="text" placeholder="Enter Username (admin)" name="uname" required>
+
+      <label for="psw"><b>Password</b></label>
+      <input id="psw" type="password" placeholder="Enter Password (1)" name="psw" required>
+	  
+	  <label for="txt"><b>Text</b></label>
+      <input id="txt" type="text" placeholder="Enter Text (My name is Alejandro)" name="txt" required>
+        
+      <button onclick="sendRequestToServer()">Send</button>
+	  
+	  <label id="answer"/>
+
+    </div>
+
+</div>
+
+<script>
+
+
+function sendRequestToServer() {
+
+  var username = document.getElementById('uname').value
+  var password = document.getElementById('psw').value
+  var textInput = document.getElementById('txt').value
+  
+  fetch('http://localhost:8001/answerWithAuth', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+	  "textInput": textInput,
+	  "languageSelected": "EN",
+	  "userName": username,
+	  "password": password
+    })
+  })
+  .then(response => {
+  
+    var promiseJSON = response.json()
+	
+	promiseJSON.then(function(json) {
+      
+	  var textOutput = json.textOutput
+	  console.log(textOutput)
+	  document.getElementById('answer').innerHTML = textOutput;
+	});
+    
+  })
+  .catch(err => {
+    console.log(err)
+	document.getElementById('answer').innerHTML = err;
+  })
+  
+  
+}
+
+
+</script>
+
+</body>
+</html>
+
