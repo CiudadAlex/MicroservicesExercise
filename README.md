@@ -14,21 +14,25 @@ Almost every node of the diagram is an independent webservice application made w
 5.	API Gateway (N clone instances). The Gateway of the system.
 6.	User Authentication (N clone instances). Authentication server.
 7.	Dialog Manager (N clone instances).
-8.	NLU (N clone instances). Natural Language Understanding.
-9.	Knowledge Server (N clone instances).
-10.	Direct Request (N clone instances). Node that answers direct requests.
-11.	Task Manager (N clone instances). Node that executes the tasks recognized in the intent of the user.
+8.	Database NoSQL. Database to store information about the users extracted from the conversations between them and the system, like name, address, etc. It must be NoSQL so that it performs well in high load situations.
+9.	NLU (N clone instances). Natural Language Understanding.
+10.	Knowledge Server (N clone instances).
+11.	Direct Request (N clone instances). Node that answers direct requests.
+12.	Task Manager (N clone instances). Node that executes the tasks recognized in the intent of the user.
 
 The N clone instances can vary among different types of microservice. For instance, the more CPU expensive or Hard Disk intensive nodes like NLU or the Knowledge Server could have more clones than other microservices since they are probably the bottleneck of the whole system.
 
 As mentioned before, the microservices will be able to load balance themselves using Spring Cloud  Ribbon. In the documentation of SpringBoot you can read:
 
-“Spring Cloud Ribbon is a library that allows communication between different processes whose main characteristic is to provide different algorithms to perform load balancing from the client side (client-side load balancing). In addition to client-side load balancing, Ribbon provides other useful functions, some of which we will discuss below.
-Eureka integration: Ribbon enables load balancing tasks between services deployed in distributed / cloud environments. Specifically, it allows you to obtain information about the services registered in Eureka and perform load balancing between them. It also allows you to define a list of services explicitly, as we will explain later in this article.
-Fault Tolerance: One of the great advantages that Ribbon provides is that it allows you to determine which services are active or down in a dynamic way and thus act accordingly to guarantee the service.
-Standard and Custom Load Balancing Strategies: Ribbon provides various strategies for load balancing, such as RoundRobinRule, AvailabilityFilteringRule, or WeightedResponseTimeRule. Also, if you need some type of strategy adjusted to particular needs, Ribbon allows you to create the classes that allow you to define it.”
+> Spring Cloud Ribbon is a library that allows communication between different processes whose main characteristic is to provide different algorithms to perform load balancing from the client side (client-side load balancing). In addition to client-side load balancing, Ribbon provides other useful functions, some of which we will discuss below.
+> Eureka integration: Ribbon enables load balancing tasks between services deployed in distributed / cloud environments. Specifically, it allows you to obtain information about the services registered in Eureka and perform load balancing between them. It also allows you to define a list of services explicitly, as we will explain later in this article.
+> Fault Tolerance: One of the great advantages that Ribbon provides is that it allows you to determine which services are active or down in a dynamic way and thus act accordingly to guarantee the service.
+> Standard and Custom Load Balancing Strategies: Ribbon provides various strategies for load balancing, such as RoundRobinRule, AvailabilityFilteringRule, or WeightedResponseTimeRule. Also, if you need some type of strategy adjusted to particular needs, Ribbon allows you to create the classes that allow you to define it.
 
 Performance tests will be carried out to measure how many microservices of each type will be built. It will depend on the processing time of each of them. The longer the more instances have to be raised. Each microservice can be deployed on a separate physical machine to avoid resource competition between microservices.
 Some of the microservices of the same type do not have to be clones. For example, if the NLU service contains many very heavy language models (for example it loads embeddings) of various languages and they do not fit in RAM all at once, forcing the operating system to continually load data from disk into RAM, it could be interesting to have several types of NLU microservice, one for each language (each one replicated in deploy several times depending on the demand of each of the languages) and deciding which one of them to use based on the language used by the user
 Each microservice can be deployed in a Docker container. It must be taken into account that any change that is modified in a database must be modified in that of all its clones, for example, when updating the language models.
 
+Despite the mention of the possible use of Queue Servers such as RabbitMQ or ZMQ I have considered that the synchronous nature of the problem to be solved (since as soon as the question is written the user is waiting for the answer), I have preferred a direct connection to through REST services between the nodes involved. Of course, Queue Servers or Libraries are very useful in asynchronous environments and sometimes in synchronous as well, but in high load circumstances the guaranteed delivery can slow things very much and they are another node to take care. Since direct REST calls doesn’t guarantee well behaviour either in high load, the best strategy to ensure a high Quality of Service would be to avoid accepting more logged users in such situations.
+
+The Continuos Delivery of this approach can be achieved simply by uploading to the Version Control System (Git, SubVersion, etc.) both the code (*.java) and the compiled (*.class), so that whenever someone pushes a change into the production branch the “post-receive hook” activates and performs a pull request downloading the new code and compilations. As soon as SpringBoot detectes the change in classes reloads itself.
